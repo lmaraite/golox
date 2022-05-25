@@ -1,5 +1,7 @@
 package token
 
+import "fmt"
+
 type Token struct {
 	tokenType TokenType
 	lexeme    string
@@ -17,5 +19,5 @@ func NewToken(tokenType TokenType, lexeme string, literal interface{}, line int)
 }
 
 func (t Token) String() string {
-	return t.tokenType.String()
+	return fmt.Sprintf("{%s, %s, %s, %d}", t.tokenType.String(), t.lexeme, t.literal, t.line)
 }

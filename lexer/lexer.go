@@ -48,7 +48,7 @@ func (l *lexer) scanTokens(source string) ([]token.Token, error) {
 		l.start = l.current
 		err = l.scanToken()
 	}
-	l.addToken(token.EOF, nil)
+	l.addToken(token.EOF)
 	return l.tokens, err
 }
 
@@ -56,25 +56,25 @@ func (l *lexer) scanToken() error {
 	c := l.advance()
 	switch c {
 	case '(':
-		l.addToken(token.LEFT_PAREN, nil)
+		l.addToken(token.LEFT_PAREN)
 	case ')':
-		l.addToken(token.RIGHT_PAREN, nil)
+		l.addToken(token.RIGHT_PAREN)
 	case '{':
-		l.addToken(token.LEFT_BRACE, nil)
+		l.addToken(token.LEFT_BRACE)
 	case '}':
-		l.addToken(token.RIGHT_BRACE, nil)
+		l.addToken(token.RIGHT_BRACE)
 	case ',':
-		l.addToken(token.COMMA, nil)
+		l.addToken(token.COMMA)
 	case '.':
-		l.addToken(token.DOT, nil)
+		l.addToken(token.DOT)
 	case '-':
-		l.addToken(token.MINUS, nil)
+		l.addToken(token.MINUS)
 	case '+':
-		l.addToken(token.PLUS, nil)
+		l.addToken(token.PLUS)
 	case ';':
-		l.addToken(token.SEMICOLON, nil)
+		l.addToken(token.SEMICOLON)
 	case '*':
-		l.addToken(token.STAR, nil)
+		l.addToken(token.STAR)
 	case '!':
 		l.lexTwoCharToken(token.BANG, token.BANG_EQUAL)
 	case '=':
@@ -85,6 +85,8 @@ func (l *lexer) scanToken() error {
 		l.lexTwoCharToken(token.GREATER, token.GREATER_EQUAL)
 	case '/':
 		l.lexSlashOrComment()
+	case '"':
+		return l.lexString()
 	case ' ':
 		break
 	case '\r':
@@ -112,9 +114,31 @@ func (l *lexer) peek() uint8 {
 	return l.source[l.current]
 }
 
-func (l *lexer) addToken(tokenType token.TokenType, literal interface{}) {
+func (l *lexer) addToken(tokenType token.TokenType) {
+	lexeme := l.source[l.start:l.current]
+	l.tokens = append(l.tokens, *token.NewToken(tokenType, lexeme, nil, l.line))
+}
+
+func (l *lexer) addLiteralToken(tokenType token.TokenType, literal interface{}) {
 	lexeme := l.source[l.start:l.current]
 	l.tokens = append(l.tokens, *token.NewToken(tokenType, lexeme, literal, l.line))
+}
+
+func (l *lexer) lexString() error {
+	for l.peek() != '"' && !l.isAtEnd() {
+		if l.peek() == '\n' {
+			l.line++
+		}
+		l.advance()
+	}
+	if l.isAtEnd() {
+		return newError(l.line, "unterminated string")
+	}
+	l.advance() // the closing "
+
+	value := l.source[l.start+1 : l.current-1]
+	l.addLiteralToken(token.STRING, value)
+	return nil
 }
 
 func (l *lexer) lexSlashOrComment() {
@@ -126,15 +150,15 @@ func (l *lexer) lexSlashOrComment() {
 			l.advance()
 		}
 	} else {
-		l.addToken(token.SLASH, nil)
+		l.addToken(token.SLASH)
 	}
 }
 
 func (l *lexer) lexTwoCharToken(tokenType token.TokenType, equalTokenType token.TokenType) {
 	if l.match('=') {
-		l.addToken(equalTokenType, nil)
+		l.addToken(equalTokenType)
 	} else {
-		l.addToken(tokenType, nil)
+		l.addToken(tokenType)
 	}
 }
 

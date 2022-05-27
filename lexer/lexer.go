@@ -3,6 +3,8 @@ package lexer
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"unicode"
 
 	"github.com/lmaraite/golox/token"
 )
@@ -96,9 +98,16 @@ func (l *lexer) scanToken() error {
 	case '\n':
 		l.line++
 	default:
+		if isDigit(c) {
+			return l.lexNumber()
+		}
 		return newError(l.line, "unexpected character")
 	}
 	return nil
+}
+
+func isDigit(char uint8) bool {
+	return unicode.IsDigit(rune(char))
 }
 
 func (l *lexer) advance() uint8 {
@@ -112,6 +121,13 @@ func (l *lexer) peek() uint8 {
 		return 0
 	}
 	return l.source[l.current]
+}
+
+func (l *lexer) peekNext() uint8 {
+	if l.current+1 >= len(l.source) {
+		return 0
+	}
+	return l.source[l.current+1]
 }
 
 func (l *lexer) addToken(tokenType token.TokenType) {
@@ -139,6 +155,23 @@ func (l *lexer) lexString() error {
 	value := l.source[l.start+1 : l.current-1]
 	l.addLiteralToken(token.STRING, value)
 	return nil
+}
+
+func (l *lexer) lexNumber() error {
+	for isDigit(l.peek()) {
+		l.advance()
+	}
+	// Look for a fractional part
+	if l.peek() == '.' && isDigit(l.peekNext()) {
+		// consume the '.'
+		l.advance()
+	}
+	for isDigit(l.peek()) {
+		l.advance()
+	}
+	value, err := strconv.ParseFloat(l.source[l.start:l.current], 64)
+	l.addLiteralToken(token.NUMBER, value)
+	return err
 }
 
 func (l *lexer) lexSlashOrComment() {

@@ -100,6 +100,8 @@ func (l *lexer) scanToken() error {
 	default:
 		if isDigit(c) {
 			return l.lexNumber()
+		} else if isAlphaNumeric(c) {
+			l.lexIdentifier()
 		}
 		return newError(l.line, "unexpected character")
 	}
@@ -108,6 +110,14 @@ func (l *lexer) scanToken() error {
 
 func isDigit(char uint8) bool {
 	return unicode.IsDigit(rune(char))
+}
+
+func isAlpha(c uint8) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+func isAlphaNumeric(c uint8) bool {
+	return isAlpha(c) || isDigit(c)
 }
 
 func (l *lexer) advance() uint8 {
@@ -172,6 +182,16 @@ func (l *lexer) lexNumber() error {
 	value, err := strconv.ParseFloat(l.source[l.start:l.current], 64)
 	l.addLiteralToken(token.NUMBER, value)
 	return err
+}
+
+func (l *lexer) lexIdentifier() {
+	for isAlphaNumeric(l.peek()) {
+		l.advance()
+	}
+	text := l.source[l.start:l.current]
+	if tokenType, ok := token.Keywords[text]; ok {
+		l.addToken(tokenType)
+	}
 }
 
 func (l *lexer) lexSlashOrComment() {

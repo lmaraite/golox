@@ -17,24 +17,7 @@ type lexer struct {
 	line    int
 }
 
-func Run(source string) error {
-	lexer := newLexer(source)
-	tokens, err := lexer.scanTokens(source)
-	if err != nil {
-		return err
-	}
-	for _, token := range tokens {
-		fmt.Println(token.String())
-	}
-	return nil
-}
-
-func newError(line int, message string) error {
-	formattedMessage := fmt.Sprintf("[line %d] Error: %s", line, message)
-	return errors.New(formattedMessage)
-}
-
-func newLexer(source string) *lexer {
+func NewLexer(source string) *lexer {
 	return &lexer{
 		source:  source,
 		tokens:  make([]token.Token, 0),
@@ -44,7 +27,12 @@ func newLexer(source string) *lexer {
 	}
 }
 
-func (l *lexer) scanTokens(source string) ([]token.Token, error) {
+func newError(line int, message string) error {
+	formattedMessage := fmt.Sprintf("[line %d] Error: %s", line, message)
+	return errors.New(formattedMessage)
+}
+
+func (l *lexer) ScanTokens(source string) ([]token.Token, error) {
 	var err error
 	for !l.isAtEnd() {
 		l.start = l.current
@@ -108,6 +96,41 @@ func (l *lexer) scanToken() error {
 	return nil
 }
 
+// addToken adds a token of a certain tokenType to the lexer
+func (l *lexer) addToken(tokenType token.TokenType) {
+	lexeme := l.source[l.start:l.current]
+	l.tokens = append(l.tokens, *token.NewToken(tokenType, lexeme, nil, l.line))
+}
+
+// addLiteralToken adds a literal token to the lexer
+func (l *lexer) addLiteralToken(tokenType token.TokenType, literal interface{}) {
+	lexeme := l.source[l.start:l.current]
+	l.tokens = append(l.tokens, *token.NewToken(tokenType, lexeme, literal, l.line))
+}
+
+// advance consumes one character of the lexer's source string and returns it
+func (l *lexer) advance() uint8 {
+	c := l.source[l.current]
+	l.current++
+	return c
+}
+
+// peek returns the current character of the lexer's source string without consuming it
+func (l *lexer) peek() uint8 {
+	if l.isAtEnd() {
+		return 0
+	}
+	return l.source[l.current]
+}
+
+// peekNext returns the next character of the lexer's source string without consuming any character
+func (l *lexer) peekNext() uint8 {
+	if l.current+1 >= len(l.source) {
+		return 0
+	}
+	return l.source[l.current+1]
+}
+
 func isDigit(char uint8) bool {
 	return unicode.IsDigit(rune(char))
 }
@@ -118,36 +141,6 @@ func isAlpha(c uint8) bool {
 
 func isAlphaNumeric(c uint8) bool {
 	return isAlpha(c) || isDigit(c)
-}
-
-func (l *lexer) advance() uint8 {
-	c := l.source[l.current]
-	l.current++
-	return c
-}
-
-func (l *lexer) peek() uint8 {
-	if l.isAtEnd() {
-		return 0
-	}
-	return l.source[l.current]
-}
-
-func (l *lexer) peekNext() uint8 {
-	if l.current+1 >= len(l.source) {
-		return 0
-	}
-	return l.source[l.current+1]
-}
-
-func (l *lexer) addToken(tokenType token.TokenType) {
-	lexeme := l.source[l.start:l.current]
-	l.tokens = append(l.tokens, *token.NewToken(tokenType, lexeme, nil, l.line))
-}
-
-func (l *lexer) addLiteralToken(tokenType token.TokenType, literal interface{}) {
-	lexeme := l.source[l.start:l.current]
-	l.tokens = append(l.tokens, *token.NewToken(tokenType, lexeme, literal, l.line))
 }
 
 func (l *lexer) lexString() error {
@@ -215,11 +208,12 @@ func (l *lexer) lexTwoCharToken(tokenType token.TokenType, equalTokenType token.
 	}
 }
 
+// match checks if the current character of the lexer source string matches the expected character
 func (l *lexer) match(expected uint8) bool {
 	if l.isAtEnd() {
 		return false
 	}
-	if l.source[l.current] != expected {
+	if l.peek() != expected {
 		return false
 	}
 	l.current++

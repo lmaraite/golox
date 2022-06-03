@@ -22,7 +22,7 @@ func main() {
 func runFile(path string) {
 	data, err := os.ReadFile(path)
 	check(err)
-	err = lexer.Run(string(data))
+	err = run(string(data))
 	check(err)
 }
 
@@ -35,9 +35,21 @@ func runPrompt() {
 		if line == "\n" {
 			break
 		}
-		err = lexer.Run(line)
+		err = run(line)
 		check(err)
 	}
+}
+
+func run(source string) error {
+	lexer := lexer.NewLexer(source)
+	tokens, err := lexer.ScanTokens(source)
+	if err != nil {
+		return err
+	}
+	for _, token := range tokens {
+		fmt.Println(token.String())
+	}
+	return nil
 }
 
 func check(err error) {

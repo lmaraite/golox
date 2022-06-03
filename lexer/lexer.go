@@ -184,7 +184,10 @@ func (l *lexer) lexIdentifier() {
 	text := l.source[l.start:l.current]
 	if tokenType, ok := token.Keywords[text]; ok {
 		l.addToken(tokenType)
+	} else {
+		l.addToken(token.IDENTIFIER)
 	}
+
 }
 
 func (l *lexer) lexSlashOrComment() {

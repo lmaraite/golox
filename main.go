@@ -13,9 +13,12 @@ import (
 
 func main() {
 	var expr expr.Expr = expr.Binary{
-		Left:     expr.Literal{Value: 5},
-		Operator: *token.NewToken(token.PLUS, "+", nil, 0),
-		Right:    expr.Literal{Value: 10},
+		Left: expr.Unary{
+			Operator: *token.NewToken(token.MINUS, "-", nil, 1),
+			Right:    expr.Literal{Value: 123},
+		},
+		Operator: *token.NewToken(token.STAR, "*", nil, 1),
+		Right:    expr.Grouping{Expression: expr.Literal{Value: 45.67}},
 	}
 	astPrinter := astprinter.AstPrinter{}
 	fmt.Println(astPrinter.Print(expr))

@@ -5,18 +5,28 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lmaraite/golox/astprinter"
+	"github.com/lmaraite/golox/expr"
 	"github.com/lmaraite/golox/lexer"
+	"github.com/lmaraite/golox/token"
 )
 
 func main() {
-	if len(os.Args) > 2 {
-		fmt.Println("Usage: golox [script]")
-		os.Exit(64)
-	} else if len(os.Args) == 2 {
-		runFile(os.Args[1])
-	} else {
-		runPrompt()
+	var expr expr.Expr = expr.Binary{
+		Left:     expr.Literal{Value: 5},
+		Operator: *token.NewToken(token.PLUS, "+", nil, 0),
+		Right:    expr.Literal{Value: 10},
 	}
+	astPrinter := astprinter.AstPrinter{}
+	fmt.Println(astPrinter.Print(expr))
+	// if len(os.Args) > 2 {
+	// 	fmt.Println("Usage: golox [script]")
+	// 	os.Exit(64)
+	// } else if len(os.Args) == 2 {
+	// 	runFile(os.Args[1])
+	// } else {
+	// 	runPrompt()
+	// }
 }
 
 func runFile(path string) {

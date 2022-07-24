@@ -1,6 +1,9 @@
 package parser
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/lmaraite/golox/expr"
 	"github.com/lmaraite/golox/token"
 )
@@ -25,6 +28,20 @@ func NewParser(tokens []token.Token) *parser {
 		tokens:  tokens,
 		current: 0,
 	}
+}
+
+func newError(errorToken token.Token, message string) error {
+	var formattedMessage string
+	if errorToken.TokenType == token.EOF {
+		formattedMessage = fmt.Sprintf("[line %d] Error at end: %s", errorToken.Line, message)
+	} else {
+		formattedMessage = fmt.Sprintf("[line %d] Error at '%s': %s", errorToken.Line, errorToken.Lexeme, message)
+	}
+	return errors.New(formattedMessage)
+}
+
+func (p *parser) Parse() expr.Expr {
+	return p.expression()
 }
 
 // expression → equality ;
@@ -128,11 +145,14 @@ func (p *parser) primary() expr.Expr {
 		p.consume(token.RIGHT_PAREN, "Expected ')' after expression.")
 		return expr.Grouping{Expression: expression}
 	}
-	return nil
+	panic(newError(p.peek(), "Expect expression."))
 }
 
-func (p *parser) consume(tokenType token.TokenType, errMsg string) {
-	// TODO: Implement method
+func (p *parser) consume(tokenType token.TokenType, errMsg string) token.Token {
+	if p.check(tokenType) {
+		return p.advance()
+	}
+	panic(newError(p.peek(), errMsg))
 }
 
 // match if the current token has any of the given types. If so

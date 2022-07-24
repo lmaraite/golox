@@ -6,30 +6,19 @@ import (
 	"os"
 
 	"github.com/lmaraite/golox/astprinter"
-	"github.com/lmaraite/golox/expr"
 	"github.com/lmaraite/golox/lexer"
-	"github.com/lmaraite/golox/token"
+	"github.com/lmaraite/golox/parser"
 )
 
 func main() {
-	var expr expr.Expr = expr.Binary{
-		Left: expr.Unary{
-			Operator: *token.NewToken(token.MINUS, "-", nil, 1),
-			Right:    expr.Literal{Value: 123},
-		},
-		Operator: *token.NewToken(token.STAR, "*", nil, 1),
-		Right:    expr.Grouping{Expression: expr.Literal{Value: 45.67}},
+	if len(os.Args) > 2 {
+		fmt.Println("Usage: golox [script]")
+		os.Exit(64)
+	} else if len(os.Args) == 2 {
+		runFile(os.Args[1])
+	} else {
+		runPrompt()
 	}
-	astPrinter := astprinter.AstPrinter{}
-	fmt.Println(astPrinter.Print(expr))
-	// if len(os.Args) > 2 {
-	// 	fmt.Println("Usage: golox [script]")
-	// 	os.Exit(64)
-	// } else if len(os.Args) == 2 {
-	// 	runFile(os.Args[1])
-	// } else {
-	// 	runPrompt()
-	// }
 }
 
 func runFile(path string) {
@@ -59,9 +48,10 @@ func run(source string) error {
 	if err != nil {
 		return err
 	}
-	for _, token := range tokens {
-		fmt.Println(token.String())
-	}
+	parser := parser.NewParser(tokens)
+	expression := parser.Parse()
+	astprinter := astprinter.AstPrinter{}
+	fmt.Println(astprinter.Print(expression))
 	return nil
 }
 

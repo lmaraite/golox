@@ -10,36 +10,36 @@ import (
 type Interpreter struct {
 }
 
-func (i *Interpreter) evaluate(expression expr.Expr) interface{} {
+func (i *Interpreter) Evaluate(expression expr.Expr) interface{} {
 	return expression.Accept(i)
 }
 
 func (i *Interpreter) VisitBinaryExpr(binary expr.Binary) interface{} {
-	left := i.evaluate(binary.Left)
-	right := i.evaluate(binary.Right)
+	left := i.Evaluate(binary.Left)
+	right := i.Evaluate(binary.Right)
 
 	switch binary.Operator.TokenType {
 	case token.GREATER:
-		return left.(float32) > right.(float32)
+		return left.(float64) > right.(float64)
 	case token.GREATER_EQUAL:
-		return left.(float32) >= right.(float32)
+		return left.(float64) >= right.(float64)
 	case token.LESS:
-		return left.(float32) < right.(float32)
+		return left.(float64) < right.(float64)
 	case token.LESS_EQUAL:
-		return left.(float32) <= right.(float32)
+		return left.(float64) <= right.(float64)
 	case token.MINUS:
-		return left.(float32) - right.(float32)
+		return left.(float64) - right.(float64)
 	case token.PLUS:
-		if reflect.TypeOf(left).Name() == "float32" && reflect.TypeOf(right).Name() == "float32" {
-			return left.(float32) + right.(float32)
+		if reflect.TypeOf(left).Name() == "float64" && reflect.TypeOf(right).Name() == "float64" {
+			return left.(float64) + right.(float64)
 		}
 		if reflect.TypeOf(left).Name() == "string" && reflect.TypeOf(right).Name() == "string" {
 			return left.(string) + right.(string)
 		}
 	case token.SLASH:
-		return left.(float32) / right.(float32)
+		return left.(float64) / right.(float64)
 	case token.STAR:
-		return left.(float32) * right.(float32)
+		return left.(float64) * right.(float64)
 	case token.BANG_EQUAL:
 		return !isEqual(left, right)
 	case token.EQUAL_EQUAL:
@@ -59,7 +59,7 @@ func isEqual(a, b interface{}) bool {
 }
 
 func (i *Interpreter) VisitGroupingExpr(grouping expr.Grouping) interface{} {
-	return i.evaluate(grouping.Expression)
+	return i.Evaluate(grouping.Expression)
 }
 
 func (i *Interpreter) VisitLiteralExpr(literal expr.Literal) interface{} {
@@ -67,13 +67,13 @@ func (i *Interpreter) VisitLiteralExpr(literal expr.Literal) interface{} {
 }
 
 func (i *Interpreter) VisitUnaryExpr(unary expr.Unary) interface{} {
-	right := i.evaluate(unary.Right)
+	right := i.Evaluate(unary.Right)
 
 	switch unary.Operator.TokenType {
 	case token.BANG:
 		return !right.(bool)
 	case token.MINUS:
-		return -right.(float32)
+		return -right.(float64)
 	}
 	return nil // unreachable
 }

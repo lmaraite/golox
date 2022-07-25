@@ -38,7 +38,10 @@ func runPrompt() {
 			break
 		}
 		err = run(line)
-		check(err)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 	}
 }
 
@@ -49,7 +52,10 @@ func run(source string) error {
 		return err
 	}
 	parser := parser.NewParser(tokens)
-	expression := parser.Parse()
+	expression, err := parser.Parse()
+	if err != nil {
+		return err
+	}
 	astprinter := astprinter.AstPrinter{}
 	fmt.Println(astprinter.Print(expression))
 	return nil

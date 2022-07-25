@@ -13,23 +13,23 @@ func (a AstPrinter) Print(e expr.Expr) interface{} {
 	return e.Accept(a)
 }
 
-func (a AstPrinter) VisitBinaryExpr(b expr.Binary) interface{} {
-	return a.paranthesize(b.Operator.Lexeme, b.Left, b.Right)
+func (a AstPrinter) VisitBinaryExpr(binary expr.Binary) interface{} {
+	return a.paranthesize(binary.Operator.Lexeme, binary.Left, binary.Right)
 }
 
-func (a AstPrinter) VisitGroupingExpr(g expr.Grouping) interface{} {
-	return a.paranthesize("group", g.Expression)
+func (a AstPrinter) VisitGroupingExpr(grouping expr.Grouping) interface{} {
+	return a.paranthesize("group", grouping.Expression)
 }
 
-func (a AstPrinter) VisitLiteralExpr(l expr.Literal) interface{} {
-	if l.Value == nil {
+func (a AstPrinter) VisitLiteralExpr(literal expr.Literal) interface{} {
+	if literal.Value == nil {
 		return "nil"
 	}
-	return l.Value
+	return literal.Value
 }
 
-func (a AstPrinter) VisitUnaryExpr(u expr.Unary) interface{} {
-	return a.paranthesize(u.Operator.Lexeme, u.Right)
+func (a AstPrinter) VisitUnaryExpr(unary expr.Unary) interface{} {
+	return a.paranthesize(unary.Operator.Lexeme, unary.Right)
 }
 
 func (a AstPrinter) paranthesize(name string, expressions ...expr.Expr) string {

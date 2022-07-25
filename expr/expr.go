@@ -21,24 +21,24 @@ type Binary struct {
 	Right    Expr
 }
 
-func (b Binary) Accept(v Visitor) interface{} {
-	return v.VisitBinaryExpr(b)
+func (binary Binary) Accept(v Visitor) interface{} {
+	return v.VisitBinaryExpr(binary)
 }
 
 type Grouping struct {
 	Expression Expr
 }
 
-func (g Grouping) Accept(v Visitor) interface{} {
-	return v.VisitGroupingExpr(g)
+func (grouping Grouping) Accept(v Visitor) interface{} {
+	return v.VisitGroupingExpr(grouping)
 }
 
 type Literal struct {
 	Value interface{}
 }
 
-func (l Literal) Accept(v Visitor) interface{} {
-	return v.VisitLiteralExpr(l)
+func (literal Literal) Accept(v Visitor) interface{} {
+	return v.VisitLiteralExpr(literal)
 }
 
 type Unary struct {
@@ -46,6 +46,6 @@ type Unary struct {
 	Right    Expr
 }
 
-func (u Unary) Accept(v Visitor) interface{} {
-	return v.VisitUnaryExpr(u)
+func (unary Unary) Accept(v Visitor) interface{} {
+	return v.VisitUnaryExpr(unary)
 }

@@ -185,6 +185,26 @@ func (p *parser) consume(tokenType token.TokenType, errMsg string) (token.Token,
 	return p.advance(), newError(p.peek(), errMsg)
 }
 
+func (p *parser) synchronize() {
+	p.advance()
+	for !p.isAtEnd() {
+		if p.previous().TokenType == token.SEMICOLON {
+			return
+		}
+		switch p.peek().TokenType {
+		case token.CLASS:
+		case token.FUN:
+		case token.FOR:
+		case token.IF:
+		case token.WHILE:
+		case token.PRINT:
+		case token.RETURN:
+			return
+		}
+		p.advance()
+	}
+}
+
 // match if the current token has any of the given types. If so
 // it consumes token and returns true.
 func (p *parser) match(tokenTypes ...token.TokenType) bool {

@@ -9,34 +9,35 @@ import (
 type AstPrinter struct {
 }
 
-func (a AstPrinter) Print(e expr.Expr) interface{} {
+func (a AstPrinter) Print(e expr.Expr) (interface{}, error) {
 	return e.Accept(a)
 }
 
-func (a AstPrinter) VisitBinaryExpr(binary expr.Binary) interface{} {
-	return a.paranthesize(binary.Operator.Lexeme, binary.Left, binary.Right)
+func (a AstPrinter) VisitBinaryExpr(binary expr.Binary) (interface{}, error) {
+	return a.paranthesize(binary.Operator.Lexeme, binary.Left, binary.Right), nil
 }
 
-func (a AstPrinter) VisitGroupingExpr(grouping expr.Grouping) interface{} {
-	return a.paranthesize("group", grouping.Expression)
+func (a AstPrinter) VisitGroupingExpr(grouping expr.Grouping) (interface{}, error) {
+	return a.paranthesize("group", grouping.Expression), nil
 }
 
-func (a AstPrinter) VisitLiteralExpr(literal expr.Literal) interface{} {
+func (a AstPrinter) VisitLiteralExpr(literal expr.Literal) (interface{}, error) {
 	if literal.Value == nil {
-		return "nil"
+		return "nil", nil
 	}
-	return literal.Value
+	return literal.Value, nil
 }
 
-func (a AstPrinter) VisitUnaryExpr(unary expr.Unary) interface{} {
-	return a.paranthesize(unary.Operator.Lexeme, unary.Right)
+func (a AstPrinter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
+	return a.paranthesize(unary.Operator.Lexeme, unary.Right), nil
 }
 
 func (a AstPrinter) paranthesize(name string, expressions ...expr.Expr) string {
 	var result string
 	result = fmt.Sprintf("(%s", name)
 	for _, v := range expressions {
-		result = fmt.Sprintf("%s %v", result, v.Accept(a))
+		print, _ := v.Accept(a)
+		result = fmt.Sprintf("%s %v", result, print)
 	}
 	result = fmt.Sprintf("%s)", result)
 	return result

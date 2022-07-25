@@ -58,10 +58,17 @@ func run(source string) error {
 		return err
 	}
 	astprinter := astprinter.AstPrinter{}
-	fmt.Println("prettyprint:", astprinter.Print(expression))
-
+	print, err := astprinter.Print(expression)
+	fmt.Println("prettyprint:", print)
+	if err != nil {
+		return err
+	}
 	interpreter := &interpreter.Interpreter{}
-	fmt.Println("result:", interpreter.Evaluate(expression))
+	result, err := interpreter.Evaluate(expression)
+	if err != nil {
+		return err
+	}
+	fmt.Println("result:", result)
 
 	return nil
 }

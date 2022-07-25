@@ -38,14 +38,34 @@ func (i *Interpreter) VisitBinaryExpr(binary expr.Binary) (interface{}, error) {
 
 	switch binary.Operator.TokenType {
 	case token.GREATER:
+		err := checkNumberOperands(binary.Operator, left, right)
+		if err != nil {
+			return nil, err
+		}
 		return left.(float64) > right.(float64), nil
 	case token.GREATER_EQUAL:
+		err := checkNumberOperands(binary.Operator, left, right)
+		if err != nil {
+			return nil, err
+		}
 		return left.(float64) >= right.(float64), nil
 	case token.LESS:
+		err := checkNumberOperands(binary.Operator, left, right)
+		if err != nil {
+			return nil, err
+		}
 		return left.(float64) < right.(float64), nil
 	case token.LESS_EQUAL:
+		err := checkNumberOperands(binary.Operator, left, right)
+		if err != nil {
+			return nil, err
+		}
 		return left.(float64) <= right.(float64), nil
 	case token.MINUS:
+		err := checkNumberOperands(binary.Operator, left, right)
+		if err != nil {
+			return nil, err
+		}
 		return left.(float64) - right.(float64), nil
 	case token.PLUS:
 		if reflect.TypeOf(left).Name() == "float64" && reflect.TypeOf(right).Name() == "float64" {
@@ -54,6 +74,7 @@ func (i *Interpreter) VisitBinaryExpr(binary expr.Binary) (interface{}, error) {
 		if reflect.TypeOf(left).Name() == "string" && reflect.TypeOf(right).Name() == "string" {
 			return left.(string) + right.(string), nil
 		}
+		return nil, newError(binary.Operator, "Operands must be two numbers or two strings.")
 	case token.SLASH:
 		return left.(float64) / right.(float64), nil
 	case token.STAR:

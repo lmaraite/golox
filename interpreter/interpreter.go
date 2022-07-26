@@ -68,6 +68,21 @@ func (i *Interpreter) VisitExprStmt(statement stmt.Expr) error {
 	return err
 }
 
+func (i *Interpreter) VisitIfStmt(statement stmt.If) error {
+	evaluatedCondition, err := i.Evaluate(statement.Condition)
+	if err != nil {
+		return err
+	}
+	if condition, ok := evaluatedCondition.(bool); ok {
+		if condition {
+			return i.execute(statement.ThenBranch)
+		} else {
+			return i.execute(statement.ElseBranch)
+		}
+	}
+	return fmt.Errorf("%v: is not a bool expression", evaluatedCondition)
+}
+
 func (i *Interpreter) VisitPrintStmt(statement stmt.Print) error {
 	value, err := i.Evaluate(statement.Expression)
 	if err != nil {

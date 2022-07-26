@@ -8,6 +8,7 @@ import (
 type Visitor interface {
 	VisitBlockStmt(Block) error
 	VisitExprStmt(Expr) error
+	VisitIfStmt(If) error
 	VisitPrintStmt(Print) error
 	VisitVarStmt(Var) error
 }
@@ -30,6 +31,16 @@ type Expr struct {
 
 func (e Expr) Accept(v Visitor) error {
 	return v.VisitExprStmt(e)
+}
+
+type If struct {
+	Condition  expr.Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
+}
+
+func (i If) Accept(v Visitor) error {
+	return v.VisitIfStmt(i)
 }
 
 type Print struct {

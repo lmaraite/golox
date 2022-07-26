@@ -15,10 +15,13 @@ import (
 //                | statement ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // statement      → exprStmt
+//			      | ifStmt
 //                | printStmt
 //				  | block ;
 // block		  → "{" declaration* "}" ;
 // exprStmt       → expression ";" ;
+// ifStmt         → "if" "(" expression ")" statement
+//                ( "else" statement )? ;
 // printStmt      → "print" expression ";" ;
 // expression     → assignment ;
 // assignment     → IDENTIFIER "=" assignment
@@ -97,9 +100,13 @@ func (p *parser) varDeclaration() (stmt.Stmt, error) {
 }
 
 // statement → exprStmt
+//			 | ifStmt
 //           | printStmt
 //           | block ;
 func (p *parser) statement() (stmt.Stmt, error) {
+	if p.match(token.IF) {
+		return p.ifStatement()
+	}
 	if p.match(token.PRINT) {
 		return p.printStatement()
 	}
@@ -111,6 +118,43 @@ func (p *parser) statement() (stmt.Stmt, error) {
 		return stmt.Block{Statements: statements}, nil
 	}
 	return p.expressionStatement()
+}
+
+// ifStmt → "if" "(" expression ")" statement
+//          ( "else" statement )? ;
+func (p *parser) ifStatement() (stmt.Stmt, error) {
+	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
+	if err != nil {
+		return nil, err
+	}
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after if condition.")
+	if err != nil {
+		return nil, err
+	}
+	thenBranch, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+	if p.match(token.ELSE) {
+		elseBranch, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		return stmt.If{
+			Condition:  condition,
+			ThenBranch: thenBranch,
+			ElseBranch: elseBranch,
+		}, nil
+	}
+	return stmt.If{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: nil,
+	}, nil
 }
 
 // block → "{" declaration* "}" ;

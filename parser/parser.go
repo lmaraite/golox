@@ -10,7 +10,10 @@ import (
 )
 
 // This is the context-free grammar we can parse with this parser:
-// program        → statement* EOF ;
+// program        → declaration* EOF ;
+// declaration    → varDecl
+//                | statement ;
+// varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // statement      → exprStmt
 //                | printStmt ;
 // exprStmt       → expression ";" ;
@@ -22,8 +25,10 @@ import (
 // factor         → unary ( ( "/" | "*" ) unary )* ;
 // unary          → ( "!" | "-" ) unary
 //                | primary ;
-// primary        → NUMBER | STRING | "true" | "false" | "nil"
-//                | "(" expression ")" ;
+// primary        → "true" | "false" | "nil"
+//                | NUMBER | STRING
+//                | "(" expression ")"
+//                | IDENTIFIER ;
 type parser struct {
 	tokens  []token.Token
 	current int
@@ -49,13 +54,42 @@ func newError(errorToken token.Token, message string) error {
 func (p *parser) Parse() ([]stmt.Stmt, error) {
 	var statements []stmt.Stmt
 	for !p.isAtEnd() {
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
 			return nil, err
 		}
 		statements = append(statements, stmt)
 	}
 	return statements, nil
+}
+
+// declaration → varDecl
+//             | statement ;
+func (p *parser) declaration() (stmt.Stmt, error) {
+	if p.match(token.VAR) {
+		return p.varDeclaration()
+	}
+	return p.statement()
+}
+
+// varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
+func (p *parser) varDeclaration() (stmt.Stmt, error) {
+	name, err := p.consume(token.IDENTIFIER, "Expected variable name.")
+	if err != nil {
+		return nil, err
+	}
+	var initializer expr.Expr
+	if p.match(token.EQUAL) {
+		initializer, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = p.consume(token.SEMICOLON, "Expected ';' after variable declaration.")
+	if err != nil {
+		return nil, err
+	}
+	return stmt.Var{Name: name, Initializer: initializer}, nil
 }
 
 // statement → exprStmt
@@ -193,8 +227,10 @@ func (p *parser) unary() (expr.Expr, error) {
 	return p.primary()
 }
 
-// primary → NUMBER | STRING | "true" | "false" | "nil"
-//         | "(" expression ")" ;
+// primary        → "true" | "false" | "nil"
+//                | NUMBER | STRING
+//                | "(" expression ")"
+//                | IDENTIFIER ;
 func (p *parser) primary() (expr.Expr, error) {
 	if p.match(token.FALSE) {
 		return expr.Literal{Value: false}, nil
@@ -210,6 +246,11 @@ func (p *parser) primary() (expr.Expr, error) {
 			Value: p.previous().Literal,
 		}, nil
 	}
+	if p.match(token.IDENTIFIER) {
+		return expr.Variable{
+			Name: p.previous(),
+		}, nil
+	}
 	if p.match(token.LEFT_PAREN) {
 		expression, err := p.expression()
 		if err != nil {
@@ -221,31 +262,13 @@ func (p *parser) primary() (expr.Expr, error) {
 	return nil, newError(p.peek(), "Expected expression.")
 }
 
+// consume consumes a token, and returns it if it matches the tokenType.
+// If not, an error is returned.
 func (p *parser) consume(tokenType token.TokenType, errMsg string) (token.Token, error) {
 	if p.check(tokenType) {
 		return p.advance(), nil
 	}
 	return p.advance(), newError(p.peek(), errMsg)
-}
-
-func (p *parser) synchronize() {
-	p.advance()
-	for !p.isAtEnd() {
-		if p.previous().TokenType == token.SEMICOLON {
-			return
-		}
-		switch p.peek().TokenType {
-		case token.CLASS:
-		case token.FUN:
-		case token.FOR:
-		case token.IF:
-		case token.WHILE:
-		case token.PRINT:
-		case token.RETURN:
-			return
-		}
-		p.advance()
-	}
 }
 
 // match if the current token has any of the given types. If so

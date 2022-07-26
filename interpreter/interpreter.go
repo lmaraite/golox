@@ -46,7 +46,7 @@ func (i *Interpreter) execute(statement stmt.Stmt) error {
 }
 
 func (i *Interpreter) executeBlock(statements []stmt.Stmt, env *environment.Environment) error {
-	previousEnv := env
+	previousEnv := i.env
 	i.env = env
 	for _, statement := range statements {
 		err := i.execute(statement)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/lmaraite/golox/environment"
 	"github.com/lmaraite/golox/expr"
 	"github.com/lmaraite/golox/stmt"
 	"github.com/lmaraite/golox/token"
@@ -21,6 +22,13 @@ func newError(errorToken token.Token, message string) error {
 }
 
 type Interpreter struct {
+	env environment.Environment
+}
+
+func NewInterpreter() *Interpreter {
+	return &Interpreter{
+		env: *environment.NewEnvironment(),
+	}
 }
 
 func (i *Interpreter) Interpret(statements []stmt.Stmt) error {
@@ -48,6 +56,19 @@ func (i *Interpreter) VisitPrintStmt(statement stmt.Print) error {
 		return err
 	}
 	fmt.Println(value)
+	return nil
+}
+
+func (i *Interpreter) VisitVarStmt(statement stmt.Var) error {
+	if statement.Initializer != nil {
+		value, err := i.Evaluate(statement.Initializer)
+		if err != nil {
+			return err
+		}
+		i.env.Define(statement.Name.Lexeme, value)
+	} else {
+		i.env.Define(statement.Name.Lexeme, nil)
+	}
 	return nil
 }
 
@@ -141,6 +162,10 @@ func (i *Interpreter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
 		return -right.(float64), nil
 	}
 	return nil, nil // unreachable
+}
+
+func (i *Interpreter) VisitVariableExpr(variable expr.Variable) (interface{}, error) {
+	return i.env.Get(variable.Name)
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {

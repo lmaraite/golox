@@ -18,15 +18,21 @@ func newError(errorToken token.Token, message string) error {
 }
 
 type Environment struct {
-	Values map[string]interface{}
+	values map[string]interface{}
 }
 
-func (e *Environment) define(name string, value interface{}) {
-	e.Values[name] = value
+func NewEnvironment() *Environment {
+	return &Environment{
+		values: make(map[string]interface{}),
+	}
 }
 
-func (e *Environment) get(name token.Token) (interface{}, error) {
-	if value, ok := e.Values[name.Lexeme]; ok {
+func (e *Environment) Define(name string, value interface{}) {
+	e.values[name] = value
+}
+
+func (e *Environment) Get(name token.Token) (interface{}, error) {
+	if value, ok := e.values[name.Lexeme]; ok {
 		return value, nil
 	}
 	return nil, newError(name, "Undefined variable '"+name.Lexeme+"'.")

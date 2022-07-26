@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
@@ -16,8 +15,6 @@ func main() {
 		os.Exit(64)
 	} else if len(os.Args) == 2 {
 		runFile(os.Args[1])
-	} else {
-		runPrompt()
 	}
 }
 
@@ -26,23 +23,6 @@ func runFile(path string) {
 	check(err)
 	err = run(string(data))
 	check(err)
-}
-
-func runPrompt() {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("> ")
-		line, err := reader.ReadString('\n')
-		check(err)
-		if line == "\n" {
-			break
-		}
-		err = run(line)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-	}
 }
 
 func run(source string) error {
@@ -57,7 +37,7 @@ func run(source string) error {
 		return err
 	}
 
-	interpreter := &interpreter.Interpreter{}
+	interpreter := interpreter.NewInterpreter()
 	err = interpreter.Interpret(statements)
 	if err != nil {
 		return err

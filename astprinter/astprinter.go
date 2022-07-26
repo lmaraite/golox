@@ -32,6 +32,10 @@ func (a AstPrinter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
 	return a.paranthesize(unary.Operator.Lexeme, unary.Right), nil
 }
 
+func (a AstPrinter) VisitVariableExpr(variable expr.Variable) (interface{}, error) {
+	return variable.Name.Lexeme, nil
+}
+
 func (a AstPrinter) paranthesize(name string, expressions ...expr.Expr) string {
 	var result string
 	result = fmt.Sprintf("(%s", name)

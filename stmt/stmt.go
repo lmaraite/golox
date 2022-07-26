@@ -6,6 +6,7 @@ import (
 )
 
 type Visitor interface {
+	VisitBlockStmt(Block) error
 	VisitExprStmt(Expr) error
 	VisitPrintStmt(Print) error
 	VisitVarStmt(Var) error
@@ -13,6 +14,14 @@ type Visitor interface {
 
 type Stmt interface {
 	Accept(v Visitor) error
+}
+
+type Block struct {
+	Statements []Stmt
+}
+
+func (b Block) Accept(v Visitor) error {
+	return v.VisitBlockStmt(b)
 }
 
 type Expr struct {

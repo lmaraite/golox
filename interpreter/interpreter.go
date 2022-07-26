@@ -22,12 +22,12 @@ func newError(errorToken token.Token, message string) error {
 }
 
 type Interpreter struct {
-	env environment.Environment
+	env *environment.Environment
 }
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		env: *environment.NewEmptyEnvironment(),
+		env: environment.NewEmptyEnvironment(),
 	}
 }
 
@@ -43,6 +43,24 @@ func (i *Interpreter) Interpret(statements []stmt.Stmt) error {
 
 func (i *Interpreter) execute(statement stmt.Stmt) error {
 	return statement.Accept(i)
+}
+
+func (i *Interpreter) executeBlock(statements []stmt.Stmt, env *environment.Environment) error {
+	previousEnv := env
+	i.env = env
+	for _, statement := range statements {
+		err := i.execute(statement)
+		if err != nil {
+			i.env = previousEnv
+			return err
+		}
+	}
+	i.env = previousEnv
+	return nil
+}
+
+func (i *Interpreter) VisitBlockStmt(statement stmt.Block) error {
+	return i.executeBlock(statement.Statements, environment.NewEnvironment(i.env))
 }
 
 func (i *Interpreter) VisitExprStmt(statement stmt.Expr) error {

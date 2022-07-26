@@ -15,7 +15,9 @@ import (
 //                | statement ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // statement      → exprStmt
-//                | printStmt ;
+//                | printStmt
+//				  | block ;
+// block		  → "{" declaration* "}" ;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
 // expression     → assignment ;
@@ -95,12 +97,36 @@ func (p *parser) varDeclaration() (stmt.Stmt, error) {
 }
 
 // statement → exprStmt
-//           | printStmt ;
+//           | printStmt
+//           | block ;
 func (p *parser) statement() (stmt.Stmt, error) {
 	if p.match(token.PRINT) {
 		return p.printStatement()
 	}
+	if p.match(token.LEFT_BRACE) {
+		statements, err := p.block()
+		if err != nil {
+			return nil, err
+		}
+		return stmt.Block{Statements: statements}, nil
+	}
 	return p.expressionStatement()
+}
+
+// block → "{" declaration* "}" ;
+func (p *parser) block() ([]stmt.Stmt, error) {
+	var statements []stmt.Stmt
+
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		statement, err := p.declaration()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, statement)
+	}
+
+	p.consume(token.RIGHT_BRACE, "Expected '}' after block.")
+	return statements, nil
 }
 
 // printStmt → "print" expression ";" ;

@@ -28,7 +28,7 @@ func NewEnvironment() *Environment {
 }
 
 func (e *Environment) Assign(name token.Token, value interface{}) error {
-	if value, ok := e.values[name.Lexeme]; ok {
+	if _, ok := e.values[name.Lexeme]; ok {
 		e.values[name.Lexeme] = value
 		return nil
 	}

@@ -175,6 +175,22 @@ func (i *Interpreter) VisitLiteralExpr(literal expr.Literal) (interface{}, error
 	return literal.Value, nil
 }
 
+func (i *Interpreter) VisitLogicalExpr(logical expr.Logical) (interface{}, error) {
+	left, err := i.Evaluate(logical.Left)
+	if err != nil {
+		return nil, err
+	}
+	right, err := i.Evaluate(logical.Right)
+	if err != nil {
+		return nil, err
+	}
+	if logical.Operator.TokenType == token.OR {
+		return isTruthy(left) || isTruthy(right), nil
+	} else {
+		return isTruthy(left) && isTruthy(right), nil
+	}
+}
+
 func (i *Interpreter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
 	right, err := i.Evaluate(unary.Right)
 	if err != nil {

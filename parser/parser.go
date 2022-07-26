@@ -25,7 +25,9 @@ import (
 // printStmt      → "print" expression ";" ;
 // expression     → assignment ;
 // assignment     → IDENTIFIER "=" assignment
-//                | equality ;
+//                | logic_or ;
+// logic_or       → logic_and ( "or" logic_and )* ;
+// logic_and      → equality ( "and" equality )* ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
@@ -198,10 +200,10 @@ func (p *parser) expression() (expr.Expr, error) {
 	return p.assignment()
 }
 
-// assignment → IDENTIFIER "=" assignment
-//            | equality ;
+// assignment     → IDENTIFIER "=" assignment
+//                | logic_or ;
 func (p *parser) assignment() (expr.Expr, error) {
-	expression, err := p.equality()
+	expression, err := p.logicalOr()
 	if err != nil {
 		return nil, err
 	}
@@ -216,6 +218,48 @@ func (p *parser) assignment() (expr.Expr, error) {
 			return expr.Assign{Name: name, Value: value}, nil
 		}
 		return nil, newError(equals, "Invalid assignment target.")
+	}
+	return expression, nil
+}
+
+// logic_or → logic_and ( "or" logic_and )* ;
+func (p *parser) logicalOr() (expr.Expr, error) {
+	expression, err := p.logicalAnd()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.OR) {
+		operator := p.previous()
+		right, err := p.logicalAnd()
+		if err != nil {
+			return nil, err
+		}
+		return expr.Logical{
+			Left:     expression,
+			Operator: operator,
+			Right:    right,
+		}, nil
+	}
+	return expression, nil
+}
+
+// logic_and → equality ( "and" equality )* ;
+func (p *parser) logicalAnd() (expr.Expr, error) {
+	expression, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.AND) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		return expr.Logical{
+			Left:     expression,
+			Operator: operator,
+			Right:    right,
+		}, nil
 	}
 	return expression, nil
 }

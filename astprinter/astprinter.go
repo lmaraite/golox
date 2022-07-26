@@ -28,6 +28,10 @@ func (a AstPrinter) VisitLiteralExpr(literal expr.Literal) (interface{}, error) 
 	return literal.Value, nil
 }
 
+func (a AstPrinter) VisitLogicalExpr(logical expr.Logical) (interface{}, error) {
+	return a.paranthesize(logical.Operator.Lexeme, logical.Left, logical.Right), nil
+}
+
 func (a AstPrinter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
 	return a.paranthesize(unary.Operator.Lexeme, unary.Right), nil
 }

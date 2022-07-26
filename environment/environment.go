@@ -18,12 +18,20 @@ func newError(errorToken token.Token, message string) error {
 }
 
 type Environment struct {
-	values map[string]interface{}
+	enclosing *Environment
+	values    map[string]interface{}
 }
 
-func NewEnvironment() *Environment {
+func NewEmptyEnvironment() *Environment {
 	return &Environment{
 		values: make(map[string]interface{}),
+	}
+}
+
+func NewEnvironment(enclosing *Environment) *Environment {
+	return &Environment{
+		enclosing: enclosing,
+		values:    make(map[string]interface{}),
 	}
 }
 
@@ -31,6 +39,9 @@ func (e *Environment) Assign(name token.Token, value interface{}) error {
 	if _, ok := e.values[name.Lexeme]; ok {
 		e.values[name.Lexeme] = value
 		return nil
+	}
+	if e.enclosing != nil {
+		return e.enclosing.Assign(name, value)
 	}
 	return newError(name, "Undefined variable '"+name.Lexeme+"'.")
 }
@@ -42,6 +53,11 @@ func (e *Environment) Define(name string, value interface{}) {
 func (e *Environment) Get(name token.Token) (interface{}, error) {
 	if value, ok := e.values[name.Lexeme]; ok {
 		return value, nil
+	}
+	if e.enclosing != nil {
+		if value, err := e.enclosing.Get(name); err == nil {
+			return value, nil
+		}
 	}
 	return nil, newError(name, "Undefined variable '"+name.Lexeme+"'.")
 }

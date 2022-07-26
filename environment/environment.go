@@ -27,6 +27,14 @@ func NewEnvironment() *Environment {
 	}
 }
 
+func (e *Environment) Assign(name token.Token, value interface{}) error {
+	if value, ok := e.values[name.Lexeme]; ok {
+		e.values[name.Lexeme] = value
+		return nil
+	}
+	return newError(name, "Undefined variable '"+name.Lexeme+"'.")
+}
+
 func (e *Environment) Define(name string, value interface{}) {
 	e.values[name] = value
 }

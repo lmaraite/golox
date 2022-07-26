@@ -18,7 +18,9 @@ import (
 //                | printStmt ;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
-// expression     → equality ;
+// expression     → assignment ;
+// assignment     → IDENTIFIER "=" assignment
+//                | equality ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
@@ -121,9 +123,31 @@ func (p *parser) expressionStatement() (stmt.Expr, error) {
 	return stmt.Expr{Expression: expression}, err
 }
 
-// expression → equality ;
+// expression → assignment ;
 func (p *parser) expression() (expr.Expr, error) {
-	return p.equality()
+	return p.assignment()
+}
+
+// assignment → IDENTIFIER "=" assignment
+//            | equality ;
+func (p *parser) assignment() (expr.Expr, error) {
+	expression, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+	if p.match(token.EQUAL) {
+		equals := p.previous()
+		value, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+		if variable, ok := expression.(expr.Variable); ok {
+			name := variable.Name
+			return expr.Assign{Name: name, Value: value}, nil
+		}
+		return nil, newError(equals, "Invalid assignment target.")
+	}
+	return expression, nil
 }
 
 // equality → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -227,10 +251,10 @@ func (p *parser) unary() (expr.Expr, error) {
 	return p.primary()
 }
 
-// primary        → "true" | "false" | "nil"
-//                | NUMBER | STRING
-//                | "(" expression ")"
-//                | IDENTIFIER ;
+// primary → "true" | "false" | "nil"
+//         | NUMBER | STRING
+//         | "(" expression ")"
+//         | IDENTIFIER ;
 func (p *parser) primary() (expr.Expr, error) {
 	if p.match(token.FALSE) {
 		return expr.Literal{Value: false}, nil
@@ -272,7 +296,7 @@ func (p *parser) consume(tokenType token.TokenType, errMsg string) (token.Token,
 }
 
 // match if the current token has any of the given types. If so
-// it consumes token and returns true.
+// it consumes the token and returns true.
 func (p *parser) match(tokenTypes ...token.TokenType) bool {
 	for _, v := range tokenTypes {
 		if p.check(v) {

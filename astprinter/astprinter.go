@@ -36,6 +36,10 @@ func (a AstPrinter) VisitVariableExpr(variable expr.Variable) (interface{}, erro
 	return variable.Name.Lexeme, nil
 }
 
+func (a AstPrinter) VisitAssignExpr(assign expr.Assign) (interface{}, error) {
+	return a.paranthesize(assign.Name.Lexeme, assign.Value), nil
+}
+
 func (a AstPrinter) paranthesize(name string, expressions ...expr.Expr) string {
 	var result string
 	result = fmt.Sprintf("(%s", name)

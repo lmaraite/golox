@@ -168,6 +168,15 @@ func (i *Interpreter) VisitVariableExpr(variable expr.Variable) (interface{}, er
 	return i.env.Get(variable.Name)
 }
 
+func (i *Interpreter) VisitAssignExpr(assign expr.Assign) (interface{}, error) {
+	value, err := i.Evaluate(assign.Value)
+	if err != nil {
+		return nil, err
+	}
+	i.env.Assign(assign.Name, value)
+	return value, nil
+}
+
 func checkNumberOperand(operator token.Token, operand interface{}) error {
 	if reflect.TypeOf(operand).String() == "float64" {
 		return nil

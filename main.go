@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lmaraite/golox/astprinter"
 	"github.com/lmaraite/golox/interpreter"
 	"github.com/lmaraite/golox/lexer"
 	"github.com/lmaraite/golox/parser"
@@ -53,22 +52,16 @@ func run(source string) error {
 		return err
 	}
 	parser := parser.NewParser(tokens)
-	expression, err := parser.Parse()
+	statements, err := parser.Parse()
 	if err != nil {
 		return err
 	}
-	astprinter := astprinter.AstPrinter{}
-	print, err := astprinter.Print(expression)
-	fmt.Println("prettyprint:", print)
-	if err != nil {
-		return err
-	}
+
 	interpreter := &interpreter.Interpreter{}
-	result, err := interpreter.Evaluate(expression)
+	err = interpreter.Interpret(statements)
 	if err != nil {
 		return err
 	}
-	fmt.Println("result:", result)
 
 	return nil
 }

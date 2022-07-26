@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/lmaraite/golox/expr"
+	"github.com/lmaraite/golox/stmt"
 	"github.com/lmaraite/golox/token"
 )
 
@@ -45,8 +46,8 @@ func newError(errorToken token.Token, message string) error {
 	return errors.New(formattedMessage)
 }
 
-func (p *parser) Parse() ([]expr.Stmt, error) {
-	var statements []expr.Stmt
+func (p *parser) Parse() ([]stmt.Stmt, error) {
+	var statements []stmt.Stmt
 	for !p.isAtEnd() {
 		stmt, err := p.statement()
 		if err != nil {
@@ -59,7 +60,7 @@ func (p *parser) Parse() ([]expr.Stmt, error) {
 
 // statement → exprStmt
 //           | printStmt ;
-func (p *parser) statement() (expr.Stmt, error) {
+func (p *parser) statement() (stmt.Stmt, error) {
 	if p.match(token.PRINT) {
 		return p.printStatement()
 	}
@@ -67,23 +68,23 @@ func (p *parser) statement() (expr.Stmt, error) {
 }
 
 // printStmt → "print" expression ";" ;
-func (p *parser) printStatement() (expr.Stmt, error) {
+func (p *parser) printStatement() (stmt.Print, error) {
 	value, err := p.expression()
 	if err != nil {
-		return expr.Stmt{}, err
+		return stmt.Print{}, err
 	}
 	_, err = p.consume(token.SEMICOLON, "Expect ';' after value.")
-	return expr.Stmt{Expression: value}, err
+	return stmt.Print{Expression: value}, err
 }
 
 // exprStmt → expression ";" ;
-func (p *parser) expressionStatement() (expr.Stmt, error) {
+func (p *parser) expressionStatement() (stmt.Expr, error) {
 	expression, err := p.expression()
 	if err != nil {
-		return expr.Stmt{}, err
+		return stmt.Expr{}, err
 	}
 	_, err = p.consume(token.SEMICOLON, "Expect ';' after expression.")
-	return expr.Stmt{Expression: expression}, err
+	return stmt.Expr{Expression: expression}, err
 }
 
 // expression → equality ;

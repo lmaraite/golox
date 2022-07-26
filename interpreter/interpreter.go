@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/lmaraite/golox/expr"
+	"github.com/lmaraite/golox/stmt"
 	"github.com/lmaraite/golox/token"
 )
 
@@ -20,6 +21,34 @@ func newError(errorToken token.Token, message string) error {
 }
 
 type Interpreter struct {
+}
+
+func (i *Interpreter) Interpret(statements []stmt.Stmt) error {
+	for _, statement := range statements {
+		err := i.execute(statement)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (i *Interpreter) execute(statement stmt.Stmt) error {
+	return statement.Accept(i)
+}
+
+func (i *Interpreter) VisitExprStmt(statement stmt.Expr) error {
+	_, err := i.Evaluate(statement.Expression)
+	return err
+}
+
+func (i *Interpreter) VisitPrintStmt(statement stmt.Print) error {
+	value, err := i.Evaluate(statement.Expression)
+	if err != nil {
+		return err
+	}
+	fmt.Println(value)
+	return nil
 }
 
 func (i *Interpreter) Evaluate(expression expr.Expr) (interface{}, error) {
@@ -112,10 +141,6 @@ func (i *Interpreter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
 		return -right.(float64), nil
 	}
 	return nil, nil // unreachable
-}
-
-func (i *Interpreter) VisitStmtExpr(stmt expr.Stmt) (interface{}, error) {
-	return nil, nil
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {

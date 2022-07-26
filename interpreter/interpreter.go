@@ -114,6 +114,10 @@ func (i *Interpreter) VisitUnaryExpr(unary expr.Unary) (interface{}, error) {
 	return nil, nil // unreachable
 }
 
+func (i *Interpreter) VisitStmtExpr(stmt expr.Stmt) (interface{}, error) {
+	return nil, nil
+}
+
 func checkNumberOperand(operator token.Token, operand interface{}) error {
 	if reflect.TypeOf(operand).String() == "float64" {
 		return nil

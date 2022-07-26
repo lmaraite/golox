@@ -9,6 +9,11 @@ import (
 )
 
 // This is the context-free grammar we can parse with this parser:
+// program        → statement* EOF ;
+// statement      → exprStmt
+//                | printStmt ;
+// exprStmt       → expression ";" ;
+// printStmt      → "print" expression ";" ;
 // expression     → equality ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -40,8 +45,45 @@ func newError(errorToken token.Token, message string) error {
 	return errors.New(formattedMessage)
 }
 
-func (p *parser) Parse() (expr.Expr, error) {
-	return p.expression()
+func (p *parser) Parse() ([]expr.Stmt, error) {
+	var statements []expr.Stmt
+	for !p.isAtEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+	return statements, nil
+}
+
+// statement → exprStmt
+//           | printStmt ;
+func (p *parser) statement() (expr.Stmt, error) {
+	if p.match(token.PRINT) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+// printStmt → "print" expression ";" ;
+func (p *parser) printStatement() (expr.Stmt, error) {
+	value, err := p.expression()
+	if err != nil {
+		return expr.Stmt{}, err
+	}
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after value.")
+	return expr.Stmt{Expression: value}, err
+}
+
+// exprStmt → expression ";" ;
+func (p *parser) expressionStatement() (expr.Stmt, error) {
+	expression, err := p.expression()
+	if err != nil {
+		return expr.Stmt{}, err
+	}
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after expression.")
+	return expr.Stmt{Expression: expression}, err
 }
 
 // expression → equality ;

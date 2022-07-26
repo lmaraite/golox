@@ -5,10 +5,11 @@ import (
 )
 
 type Visitor interface {
-	VisitBinaryExpr(b Binary) (interface{}, error)
-	VisitGroupingExpr(g Grouping) (interface{}, error)
-	VisitLiteralExpr(l Literal) (interface{}, error)
-	VisitUnaryExpr(u Unary) (interface{}, error)
+	VisitBinaryExpr(binary Binary) (interface{}, error)
+	VisitGroupingExpr(grouping Grouping) (interface{}, error)
+	VisitLiteralExpr(literal Literal) (interface{}, error)
+	VisitUnaryExpr(unary Unary) (interface{}, error)
+	VisitStmtExpr(stmt Stmt) (interface{}, error)
 }
 
 type Expr interface {
@@ -48,4 +49,13 @@ type Unary struct {
 
 func (unary Unary) Accept(v Visitor) (interface{}, error) {
 	return v.VisitUnaryExpr(unary)
+}
+
+type Stmt struct {
+	Expression Expr
+	Print      Expr
+}
+
+func (stmt Stmt) Accept(v Visitor) (interface{}, error) {
+	return v.VisitStmtExpr(stmt)
 }

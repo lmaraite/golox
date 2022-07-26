@@ -17,7 +17,9 @@ import (
 // statement      → exprStmt
 //			      | ifStmt
 //                | printStmt
+// 				  | whileStmt
 //				  | block ;
+// whileStmt      → "while" "(" expression ")" statement ;
 // block		  → "{" declaration* "}" ;
 // exprStmt       → expression ";" ;
 // ifStmt         → "if" "(" expression ")" statement
@@ -104,6 +106,7 @@ func (p *parser) varDeclaration() (stmt.Stmt, error) {
 // statement → exprStmt
 //			 | ifStmt
 //           | printStmt
+//           | whileStmt
 //           | block ;
 func (p *parser) statement() (stmt.Stmt, error) {
 	if p.match(token.IF) {
@@ -111,6 +114,9 @@ func (p *parser) statement() (stmt.Stmt, error) {
 	}
 	if p.match(token.PRINT) {
 		return p.printStatement()
+	}
+	if p.match(token.WHILE) {
+		return p.while()
 	}
 	if p.match(token.LEFT_BRACE) {
 		statements, err := p.block()
@@ -120,6 +126,30 @@ func (p *parser) statement() (stmt.Stmt, error) {
 		return stmt.Block{Statements: statements}, nil
 	}
 	return p.expressionStatement()
+}
+
+// whileStmt → "while" "(" expression ")" statement ;
+func (p *parser) while() (stmt.Stmt, error) {
+	_, err := p.consume(token.LEFT_PAREN, "Expected '(' after 'while'.")
+	if err != nil {
+		return nil, err
+	}
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(token.RIGHT_PAREN, "Expected ')' after condition.")
+	if err != nil {
+		return nil, err
+	}
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.While{
+		Condition: condition,
+		Body:      body,
+	}, nil
 }
 
 // ifStmt → "if" "(" expression ")" statement

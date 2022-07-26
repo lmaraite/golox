@@ -11,6 +11,7 @@ type Visitor interface {
 	VisitIfStmt(If) error
 	VisitPrintStmt(Print) error
 	VisitVarStmt(Var) error
+	VisitWhileStmt(While) error
 }
 
 type Stmt interface {
@@ -58,4 +59,13 @@ type Var struct {
 
 func (v Var) Accept(vis Visitor) error {
 	return vis.VisitVarStmt(v)
+}
+
+type While struct {
+	Condition expr.Expr
+	Body      Stmt
+}
+
+func (w While) Accept(visitor Visitor) error {
+	return visitor.VisitWhileStmt(w)
 }

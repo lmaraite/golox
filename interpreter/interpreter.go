@@ -102,6 +102,20 @@ func (i *Interpreter) VisitVarStmt(statement stmt.Var) error {
 	return nil
 }
 
+func (i *Interpreter) VisitWhileStmt(statement stmt.While) error {
+	condition, err := i.Evaluate(statement.Condition)
+	if err != nil {
+		return err
+	}
+	for isTruthy(condition) {
+		err = i.execute(statement.Body)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (i *Interpreter) Evaluate(expression expr.Expr) (interface{}, error) {
 	return expression.Accept(i)
 }

@@ -1,0 +1,19 @@
+var a = 3;
+var b = 5;
+
+var condition = a + b == 8;
+var greet;
+
+if (condition)
+    greet = "world!";
+else
+    greet = "golox";
+
+print "Hello, " + greet + "!";
+
+var i = 0;
+
+while (i < 10) {
+    print i;
+    i = i + 1;
+}

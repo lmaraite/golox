@@ -112,6 +112,13 @@ func (i *Interpreter) VisitWhileStmt(statement stmt.While) error {
 		if err != nil {
 			return err
 		}
+		condition, err := i.Evaluate(statement.Condition)
+		if err != nil {
+			return err
+		}
+		if !isTruthy(condition) {
+			break
+		}
 	}
 	return nil
 }

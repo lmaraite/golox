@@ -18,13 +18,13 @@ type Expr interface {
 	Accept(visitor Visitor) (interface{}, error)
 }
 
-func (a Assign) Accept(visitor Visitor) (interface{}, error) {
-	return visitor.VisitAssignExpr(a)
-}
-
 type Assign struct {
 	Name  token.Token
 	Value Expr
+}
+
+func (a Assign) Accept(visitor Visitor) (interface{}, error) {
+	return visitor.VisitAssignExpr(a)
 }
 
 type Binary struct {

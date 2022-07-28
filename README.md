@@ -1,5 +1,6 @@
 # golox
-A lox implementation written in Go
+A lox implementation written in Go.
+
 Where does lox come from: https://craftinginterpreters.com/
 
 
